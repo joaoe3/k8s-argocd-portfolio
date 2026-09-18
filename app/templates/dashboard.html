@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cluster Dashboard</title>
+    <style>
+        body { font-family: sans-serif; margin: 2rem; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 2rem; }
+        th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+        th { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Nodes</h1>
+    <table>
+        <tr><th>Name</th><th>Status</th></tr>
+        {% for node in nodes %}
+        <tr><td>{{ node.name }}</td><td>{{ node.status }}</td></tr>
+        {% endfor %}
+    </table>
+
+    <h1>Pods</h1>
+    <table>
+        <tr><th>Name</th><th>Namespace</th><th>Status</th></tr>
+        {% for pod in pods %}
+        <tr><td>{{ pod.name }}</td><td>{{ pod.namespace }}</td><td>{{ pod.status }}</td></tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
