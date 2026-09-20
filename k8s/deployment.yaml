@@ -16,7 +16,7 @@ spec:
       serviceAccountName: dashboard-app-sa
       containers:
         - name: dashboard-app
-          image: dashboard-app:latest
+          image: dashboard-app:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
