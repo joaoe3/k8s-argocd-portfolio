@@ -1,0 +1,14 @@
+name: Commit Lint
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  lint-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title with commitlint
+        run: |
+          npm install --no-save @commitlint/cli @commitlint/config-conventional
+          echo "${{ github.event.pull_request.title }}" | npx commitlint
