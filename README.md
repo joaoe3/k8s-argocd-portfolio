@@ -111,3 +111,5 @@ python3 scripts/healthcheck.py
 - Image versioning and reproducibility, and why `latest` tags are a real
   operational problem, learned by hitting the actual issue mid-build
 - A working, genuinely useful supporting script with proper error handling
+
+
