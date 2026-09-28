@@ -13,3 +13,4 @@ jobs:
         run: |
           npm install --no-save @commitlint/cli @commitlint/config-conventional
           echo "${{ github.event.pull_request.title }}" | npx commitlint --config .commitlintrc.json
+          echo "✅ Commit message format is valid"
