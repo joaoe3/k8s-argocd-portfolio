@@ -8,7 +8,8 @@ jobs:
   lint-pr-title:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Check PR title with commitlint
         run: |
           npm install --no-save @commitlint/cli @commitlint/config-conventional
-          echo "${{ github.event.pull_request.title }}" | npx commitlint
+          echo "${{ github.event.pull_request.title }}" | npx commitlint --config .commitlintrc.json
