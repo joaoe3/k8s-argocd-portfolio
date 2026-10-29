@@ -1,0 +1,16 @@
+name: Build Image
+
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - ".github/workflows/build-image.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t dashboard-app:${{ github.sha }} ./app
