@@ -6,6 +6,9 @@ on:
       - "app/**"
       - ".github/workflows/build-image.yml"
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,3 +17,14 @@ jobs:
 
       - name: Build image
         run: docker build -t dashboard-app:${{ github.sha }} ./app
+
+      - name: Scan image with Trivy
+        # v0.35.0, pinned by commit SHA (tags were hijacked in the March 2026 compromise)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        with:
+          version: v0.69.3            # known-safe Trivy release
+          image-ref: dashboard-app:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true        # only fail on issues that have a fix available
+          exit-code: "1"              # fail the job if any are found
+          format: table
