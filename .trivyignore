@@ -1,0 +1,4 @@
+# setuptools 70.3.0 is only pip's vendored pkg_resources (pip/_vendor/vendor.txt).
+# CVE-2025-47273 affects setuptools' PackageIndex, which pip does not vendor.
+# Re-check when pip updates its vendored copy.
+CVE-2025-47273 exp:2027-02-28
