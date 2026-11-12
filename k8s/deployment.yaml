@@ -14,12 +14,30 @@ spec:
         app: dashboard-app
     spec:
       serviceAccountName: dashboard-app-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: dashboard-app
-          image: dashboard-app:v1
+          image: dashboard-app:v2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
+          env:
+            - name: PYTHONDONTWRITEBYTECODE   # don't try to write .pyc files on a read-only filesystem
+              value: "1"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            privileged: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp              # writable scratch space, since the rest is read-only
           resources:
             requests:
               cpu: "100m"
@@ -27,3 +45,6 @@ spec:
             limits:
               cpu: "250m"
               memory: "128Mi"
+      volumes:
+        - name: tmp
+          emptyDir: {}
