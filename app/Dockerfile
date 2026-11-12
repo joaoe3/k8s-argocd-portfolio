@@ -16,6 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py .
 COPY templates/ templates/
 
+RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin appuser
+USER 10001
+
 EXPOSE 5000
 
 CMD ["python", "app.py"]
