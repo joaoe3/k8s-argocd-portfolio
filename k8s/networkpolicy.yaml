@@ -1,0 +1,56 @@
+# 1. Deny everything in and out of the namespace by default
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: dashboard-app
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress", "Egress"]
+---
+# 2. Let in only pods labelled access=dashboard, on the app port
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dashboard-ingress
+  namespace: dashboard-app
+spec:
+  podSelector:
+    matchLabels:
+      app: dashboard-app
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - namespaceSelector: {}        # any namespace...
+          podSelector:
+            matchLabels:
+              access: dashboard        # ...but only pods with this label
+      ports:
+        - port: 5000
+          protocol: TCP
+---
+# 3. Let the app out only to DNS and the Kubernetes API
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dashboard-egress
+  namespace: dashboard-app
+spec:
+  podSelector:
+    matchLabels:
+      app: dashboard-app
+  policyTypes: ["Egress"]
+  egress:
+    - to:                              # DNS (CoreDNS)
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - { port: 53, protocol: UDP }
+        - { port: 53, protocol: TCP }
+    - ports:                           # Kubernetes API (service 443, real server 6443)
+        - { port: 443, protocol: TCP }
+        - { port: 6443, protocol: TCP }
