@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify, render_template
 from kubernetes import client, config
 
@@ -5,10 +6,14 @@ app = Flask(__name__)
 
 config.load_incluster_config()
 v1 = client.CoreV1Api()
+NAMESPACES = ["dashboard-app", "argocd"]
 
 def get_pods():
-    pods = v1.list_pod_for_all_namespaces()
-    return [{"name": p.metadata.name, "namespace": p.metadata.namespace, "status": p.status.phase} for p in pods.items]
+    pods = []
+    for ns in NAMESPACES:
+        for p in v1.list_namespaced_pod(ns).items:
+            pods.append({"name": p.metadata.name, "namespace": p.metadata.namespace, "status": p.status.phase})
+    return pods
 
 def get_nodes():
     nodes = v1.list_node()

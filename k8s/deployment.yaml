@@ -22,13 +22,15 @@ spec:
           type: RuntimeDefault
       containers:
         - name: dashboard-app
-          image: dashboard-app:v2
+          image: dashboard-app:v3
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
           env:
             - name: PYTHONDONTWRITEBYTECODE   # don't try to write .pyc files on a read-only filesystem
               value: "1"
+            - name: WATCH_NAMESPACES
+              value: "dashboard-app,argocd"
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

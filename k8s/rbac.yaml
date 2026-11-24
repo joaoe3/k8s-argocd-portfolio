@@ -1,0 +1,60 @@
+# Nodes are cluster-scoped: they need a ClusterRole + ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dashboard-nodes-read
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dashboard-nodes-read
+subjects:
+  - kind: ServiceAccount
+    name: dashboard-app-sa
+    namespace: dashboard-app
+roleRef:
+  kind: ClusterRole
+  name: dashboard-nodes-read
+  apiGroup: rbac.authorization.k8s.io
+---
+# Pods: one reusable ClusterRole, granted per namespace with RoleBindings
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dashboard-pods-read
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dashboard-pods-read
+  namespace: dashboard-app
+subjects:
+  - kind: ServiceAccount
+    name: dashboard-app-sa
+    namespace: dashboard-app
+roleRef:
+  kind: ClusterRole
+  name: dashboard-pods-read
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dashboard-pods-read
+  namespace: argocd
+subjects:
+  - kind: ServiceAccount
+    name: dashboard-app-sa
+    namespace: dashboard-app
+roleRef:
+  kind: ClusterRole
+  name: dashboard-pods-read
+  apiGroup: rbac.authorization.k8s.io
