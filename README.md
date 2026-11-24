@@ -26,7 +26,9 @@ Terraform ──► kind cluster (local Kubernetes in Docker)
                             │     get/list on pods and nodes)
                             ├── Deployment (non-root, read-only root filesystem,
                             │     all capabilities dropped, requests/limits set)
-                            └── Service (exposes the app internally)
+                            ├── Service (exposes the app internally)
+                            └── NetworkPolicies (default deny; allow only
+                                  labelled clients in, DNS + API out)
 ```
 
 **Architecture:**
@@ -82,6 +84,26 @@ allowPrivilegeEscalation != false (...), unrestricted capabilities (...),
 runAsNonRoot != true (...), seccompProfile (...)
 ```
 
+### Network isolation
+- The namespace starts from **default deny** for both ingress and egress.
+- **Ingress:** only pods labelled `access: dashboard` (from any namespace) may
+  reach the app, and only on its port (5000).
+- **Egress:** the app may only reach **DNS** (CoreDNS, port 53 UDP/TCP) and the
+  **Kubernetes API** (443/6443). Forgetting DNS is the classic mistake when
+  locking down egress.
+- **Verified, not assumed** (a NetworkPolicy is silently ignored if the CNI
+  doesn't enforce it):
+
+| Test | Result |
+|---|---|
+| Pod **without** the label calls the dashboard | `000` (blocked) |
+| Pod **with** `access=dashboard` calls the dashboard | `200` |
+| Dashboard still lists pods and nodes | works (DNS + API egress allowed) |
+
+  The first run still returned `200`: kindnet couldn't reach the API server
+  after a slow cluster start, so it had never loaded the policies. Reading its
+  logs found the cause; restarting it made enforcement take effect.
+
 ### Secrets hygiene
 - The generated kubeconfig is git-ignored (it was once committed by mistake
   and has since been untracked).
@@ -93,7 +115,7 @@ terraform/cluster/     # Terraform config provisioning the local kind cluster
 app/                    # Flask application, Dockerfile, requirements.in / .txt
 k8s/                    # Kubernetes manifests: namespace (Pod Security labels),
                         #   ServiceAccount, ClusterRole/ClusterRoleBinding,
-                        #   Deployment, Service
+                        #   Deployment, Service, NetworkPolicies
 argocd/                 # ArgoCD Application manifest
 scripts/                # Supporting Python health-check script
 .github/workflows/      # CI: commit lint, image build + Trivy scan
@@ -146,7 +168,6 @@ python3 scripts/healthcheck.py
 ## What I'd add with more time
 
 - Push the image to GHCR and bump the version tag automatically on merge
-- NetworkPolicies: default deny, then allow only ingress to the app, DNS and the API server
 - Tighter RBAC: nodes cluster-wide, pods only in specific namespaces via RoleBindings
 - Image signing (cosign) and admission control (Kyverno) so only signed images run
 - Prometheus and Grafana for metrics
@@ -159,7 +180,8 @@ python3 scripts/healthcheck.py
 - Kubernetes fundamentals: namespaces, RBAC least-privilege, resource
   requests/limits, Services/label selectors
 - Kubernetes security in practice: non-root workloads, `securityContext`
-  hardening, and Pod Security Standards enforced by the cluster
+  hardening, Pod Security Standards enforced by the cluster, and default-deny
+  NetworkPolicies verified with real traffic tests
 - Shift-left security: vulnerability scanning as a merge gate, supply-chain
   awareness (SHA-pinned actions), and documented exceptions instead of ignored findings
 - GitOps in practice via ArgoCD, including verified drift detection and
